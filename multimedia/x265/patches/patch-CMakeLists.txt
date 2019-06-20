@@ -7,18 +7,30 @@ Solaris ld: Passing "-Wa,--noexecstack" to gcc will generate an ELF section
             requesting a non executable stack. I don't know if Solaris ld
             is complying or just ignoring it.
 
---- CMakeLists.txt.OLD	2017-01-27 02:42:21.295232904 +0000
-+++ CMakeLists.txt	2017-01-27 02:51:32.144600352 +0000
-@@ -523,7 +523,11 @@
+--- CMakeLists.txt.orig	2019-01-23 09:47:18.000000000 +0000
++++ CMakeLists.txt
+@@ -620,7 +620,12 @@ if(ENABLE_SHARED)
          elseif(CYGWIN)
              # Cygwin is not officially supported or tested. MinGW with msys is recommended.
          else()
 -            list(APPEND LINKER_OPTIONS "-Wl,-Bsymbolic,-znoexecstack")
-+            if(${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
-+                list(APPEND LINKER_OPTIONS "-mimpure-text -Wa,--noexecstack")
++            if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
++                list(APPEND LINKER_OPTIONS "-mimpure-text -Wl,-M,/usr/lib/ld/map.noexstk")
 +            else()
-+                list(APPEND LINKER_OPTIONS "-Wl,-Bsymbolic,-znoexecstack")
++                list(APPEND LINKER_OPTIONS "-Wl,-znoexecstack")
 +            endif()
++            list(APPEND SHARED_LINKER_OPTIONS "-Wl,-Bsymbolic")
          endif()
      endif()
      set_target_properties(x265-shared PROPERTIES SOVERSION ${X265_BUILD})
+@@ -641,8 +646,8 @@ if(ENABLE_SHARED)
+     endif()
+     if(LINKER_OPTIONS)
+         # set_target_properties can't do list expansion
+-        string(REPLACE ";" " " LINKER_OPTION_STR "${LINKER_OPTIONS}")
+-        set_target_properties(x265-shared PROPERTIES LINK_FLAGS "${LINKER_OPTION_STR}")
++        string(REPLACE ";" " " SHARED_LINKER_OPTION_STR "${LINKER_OPTIONS} ${SHARED_LINKER_OPTIONS}")
++        set_target_properties(x265-shared PROPERTIES LINK_FLAGS "${SHARED_LINKER_OPTION_STR}")
+     endif()
+ endif()
+ 
